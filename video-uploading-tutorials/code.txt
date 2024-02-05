@@ -1,0 +1,81 @@
+To make things easy breezy for you, I've organized all the links referenced in this course below by lesson title. Just check out this lesson whenever you need a link!
+
+Section 1: Introduction to Django
+
+Why Learn Django
+
+Companies using Django: https://careerkarma.com/blog/companies-that-use-django/
+
+Section 2: Installation and Setup
+
+Python Installation  
+
+Python Download for macOS, Windows, and Linux: https://www.python.org/downloads/
+
+Visual Studio Code Installation  
+
+VS Code Download: https://code.visualstudio.com/download
+
+Build Django Projects Quickly From The Browser Using Replit  
+
+Replit: https://replit.com/@DomVacchiano/PastelSlategrayExabyte
+
+Git Bash Terminal Installation  
+
+Git / Git Bash Download: https://git-scm.com/downloads
+
+Section 3: Views and URLs + Your First Django App
+
+Django Project Setup  
+
+GitHub repo for project: https://github.com/vacchiano/ZTM-Django-section-urls
+
+Dynamic Urls Overview A Look At The Django Docs  
+
+Django Documentation: https://docs.djangoproject.com/en/4.1/topics/http/urls/
+
+Section 4: Django Templates + Favorite Movies App Project
+
+Movies App Project Setup  
+
+GitHub repo for project: https://github.com/vacchiano/ZTM-Django-template
+
+Django Template Variables, Tags, And Filters Overview  
+
+Django documentation: https://docs.djangoproject.com/en/4.1/topics/templates/#the-django-template-language
+
+Django Template Inheritance Overview  
+
+Django documentation: https://docs.djangoproject.com/en/4.1/ref/templates/language/#template-inheritance
+
+Section 5: Django Models + Jobs Board Project
+
+Job Board Project And App Setup  
+
+GitHub repo for project: https://github.com/vacchiano/ZTM-Django-models
+
+Section 6: Django Admin
+
+None
+
+Section 7: Django Forms + Bitly Clone Project
+
+Setting Up Our Link Shortener Django Project  
+
+Github repo for project: https://github.com/vacchiano/ZTM-Django-forms
+
+Section 8: Django Class-Based Views + Linketree Clone Project
+
+Creating Initial Django Project And LinkPlant App  
+
+GitHub repo for project: https://github.com/vacchiano/ZTM-Django-cbv
+
+Section 9: User Authentication and Authorization + TripTrak Project
+
+Initial Project Setup And Creating Trip App  
+
+GitHub repo for project: https://github.com/vacchiano/ZTM-Django-auth
+
+Section 10: REST Framework Fundamentals
+
+None
