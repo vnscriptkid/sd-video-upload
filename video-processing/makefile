@@ -7,6 +7,9 @@ build_prod:
 run:
 	docker run -p 3000:3000 -d --name video-processing-service video-processing-service
 
+rm:
+	docker rm video-processing-service -f
+
 rmi:
 	docker rmi video-processing-service -f
 
