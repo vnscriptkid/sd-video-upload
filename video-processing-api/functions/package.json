@@ -9,7 +9,8 @@
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
-    "deploy:generateUploadUrl": "firebase deploy --only functions:generateUploadUrl"
+    "deploy:generateUploadUrl": "firebase deploy --only functions:generateUploadUrl",
+    "deploy:getVideos": "firebase deploy --only functions:getVideos"
   },
   "engines": {
     "node": "18"
