@@ -18,6 +18,8 @@ app.use(express.json());
 // Process a video file from Cloud Storage into 360p
 app.post('/process-video', async (req, res) => {
 
+  console.log('Received request to process video:', req.body);
+
   // Get the bucket and filename from the Cloud Pub/Sub message
   let data;
   try {
@@ -31,11 +33,14 @@ app.post('/process-video', async (req, res) => {
     return res.status(400).send('Bad Request: missing filename.');
   }
 
+  
   const inputFileName = data.name;
   const outputFileName = `processed-${inputFileName}`;
-
+  
   // Download the raw video from Cloud Storage
+  console.log('Before downloadRawVideo')
   await downloadRawVideo(inputFileName);
+  console.log('After downloadRawVideo')
 
   // Process the video into 360p
   try { 
@@ -47,14 +52,20 @@ app.post('/process-video', async (req, res) => {
     ]);
     return res.status(500).send('Processing failed');
   }
+
+  console.log('After convertVideo')
   
   // Upload the processed video to Cloud Storage
   await uploadProcessedVideo(outputFileName);
+
+  console.log('After uploadProcessedVideo')
 
   await Promise.all([
     deleteRawVideo(inputFileName),
     deleteProcessedVideo(outputFileName)
   ]);
+
+  console.log('After deleteRawVideo && deleteProcessedVideo')
 
   return res.status(200).send('Processing finished successfully');
 });

@@ -3,7 +3,7 @@ PROJECT_ID=video-processing-17e6f
 REGION=asia-southeast1
 REPO_NAME=video-processing-repo
 IMAGE_NAME=video-processing-service
-SERVICE_URL=https://video-processing-service-nldiin3tva-as.a.run.app
+SERVICE_URL=https://video-processing-service-nldiin3tva-as.a.run.app/process-video
 TOPIC_NAME=video-processing-topic
 SUBSCRIPTION_NAME=video-processing-sub
 BUCKET_RAW_NAME=video-raw-bucket
@@ -55,6 +55,9 @@ cloud_run:
 		--min-instances=0 \
 		--max-instances=1 \
 		--ingress=internal
+
+## Step 1+2+3
+deploy: repo_auth build_prod repo_push cloud_run
 
 ## Enable svc
 enable_svc: # cloud run, artifact registry
