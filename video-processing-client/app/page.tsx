@@ -3,7 +3,6 @@ import { getVideos } from './firebase/functions';
 import styles from './page.module.css'
 import Image from 'next/image';
 
-
 export default async function Home() {
   const videos = await getVideos();
   
@@ -22,3 +21,5 @@ export default async function Home() {
     </main>
   )
 }
+
+export const revalidate = 30;
