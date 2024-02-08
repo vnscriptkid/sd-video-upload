@@ -57,7 +57,7 @@ cloud_run:
 		--ingress=internal
 
 ## Step 1+2+3
-deploy: repo_auth build_prod repo_push cloud_run
+deploy: build_prod repo_push cloud_run
 
 ## Enable svc
 enable_svc: # cloud run, artifact registry

@@ -4,6 +4,7 @@
 - fluent-ffmpeg
 - https://ffmpeg.org/download.html
 - @google-cloud/storage
+- firebase-admin
 
 ## docker
 - Take advantage of docker layer caching by copying package.json and package-lock.json first, then running npm install, then copying the rest of the files.
