@@ -3,6 +3,8 @@ import { initializeApp } from "firebase/app";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, User } from "firebase/auth";
 // import { getAnalytics } from "firebase/analytics";
 
+import { getFunctions } from "firebase/functions";
+
 // Your web app's Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyAzAYqmdBkqN3qNPlW6Gn5RmDI1rNCx2jU",
@@ -18,6 +20,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 // const analytics = getAnalytics(app);
 const auth = getAuth(app);
+
+export const functions = getFunctions(app);
 
 /**
  * Signs the user in with a Google popup.

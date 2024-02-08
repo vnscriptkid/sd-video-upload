@@ -8,6 +8,10 @@
   background-color: bisque;
 }
 
+.thumbnail {
+  margin: 10px;
+}
+
 .description {
   display: inherit;
   justify-content: inherit;
