@@ -8,6 +8,7 @@ TOPIC_NAME=video-processing-topic
 SUBSCRIPTION_NAME=video-processing-sub
 BUCKET_RAW_NAME=video-raw-bucket
 BUCKET_PROCESSED_NAME=video-processed-bucket
+CORS_FILE=utils/gcs-cors.json
 
 build:
 	docker build --platform linux/amd64 -f Dockerfile.local -t video-processing-service .
@@ -84,3 +85,6 @@ bucket_processed_create:
 # -e OBJECT_FINALIZE: trigger when a new object is created
 bucket_raw_notif_create:
 	gsutil notification create -t $(TOPIC_NAME) -f json -e OBJECT_FINALIZE gs://$(BUCKET_RAW_NAME)
+
+bucket_raw_cors:
+	gcloud storage buckets update gs://$(BUCKET_RAW_NAME) --cors-file=$(CORS_FILE)
