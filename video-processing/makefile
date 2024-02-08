@@ -1,4 +1,3 @@
-### define the project id as "abc"
 PROJECT_ID=video-processing-17e6f
 REGION=asia-southeast1
 REPO_NAME=video-processing-repo
