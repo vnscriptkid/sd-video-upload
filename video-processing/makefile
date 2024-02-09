@@ -30,6 +30,9 @@ sh:
 echo:
 	echo $(PROJECT_ID)
 
+gcloud_login:
+	gcloud auth login
+
 #### Deploy to Cloud Run
 ## Step 0
 repo_auth:
@@ -71,7 +74,8 @@ sub_create:
 	gcloud pubsub subscriptions create $(SUBSCRIPTION_NAME) \
 		--topic=$(TOPIC_NAME) \
 		--push-endpoint=$(SERVICE_URL) \
-		--ack-deadline=600
+		--ack-deadline=600 \
+		--message-retention-duration=6d
 
 sub_delete:
 	gcloud pubsub subscriptions delete $(SUBSCRIPTION_NAME)
