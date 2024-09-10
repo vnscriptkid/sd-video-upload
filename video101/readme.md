@@ -10,3 +10,6 @@
 - HLS: HTTP Live Streaming
     - .m3u8: manifest file (playlist), first file to be downloaded
     - .ts: video segments (MPEG-2 transport stream)
+- manifest files (m3u8 - HLS, mpd - DASH)
+    - primary: contains all the video segments
+    - variant: contains the video segments for a specific resolution
