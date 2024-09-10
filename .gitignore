@@ -4,3 +4,5 @@ output_*.mp4
 stream*.ts
 .DS_Store
 segment*.ts
+*.aac
+*.h264

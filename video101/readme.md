@@ -5,6 +5,10 @@
 - codec: compresses and decompresses video, e.g. h.264, h.265
 - bitrates
 - container: mp4, mov, avi, mkv
+    - video codec
+    - audio codec
+    - metadata
+    - subtitles
 - resolutions: 360, 720, 1080
 - streaming protocols: HLS, DASH
 - HLS: HTTP Live Streaming
