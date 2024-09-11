@@ -6,3 +6,4 @@ stream*.ts
 segment*.ts
 *.aac
 *.h264
+.env

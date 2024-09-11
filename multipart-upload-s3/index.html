@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multipart Video Upload to S3</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.0/spark-md5.min.js"></script>
+</head>
+<body>
+    <h1>Multipart Video Upload to S3</h1>
+    <input type="file" id="videoFile" />
+    <button onclick="uploadVideo()">Upload</button>
+
+    <script>
+        async function calculateMD5(blob) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsArrayBuffer(blob);
+                reader.onload = function(e) {
+                    const spark = new SparkMD5.ArrayBuffer();
+                    spark.append(e.target.result);
+                    resolve(spark.end());
+                };
+                reader.onerror = function(e) {
+                    reject('Error calculating MD5');
+                };
+            });
+        }
+
+        async function uploadVideo() {
+            const fileInput = document.getElementById('videoFile');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert('Please select a file to upload.');
+                return;
+            }
+
+            const partSize = 5 * 1024 * 1024; // 5MB parts
+            const totalParts = Math.ceil(file.size / partSize);
+
+            // Step 1: Initiate multipart upload
+            const initiateResponse = await fetch('/initiate-multipart-upload?filename=' + encodeURIComponent(file.name), {
+                method: 'POST',
+                credentials: 'include',
+            });
+            const initiateData = await initiateResponse.json();
+            const uploadID = initiateData.uploadID;
+
+            const completedParts = [];
+
+            for (let partNumber = 1; partNumber <= totalParts; partNumber++) {
+                const start = (partNumber - 1) * partSize;
+                const end = Math.min(start + partSize, file.size);
+                const blob = file.slice(start, end);
+
+                // Calculate MD5 hash of the part for client-side verification
+                const calculatedMD5 = await calculateMD5(blob);
+
+                // Step 2: Get presigned URL for each part
+                const presignedResponse = await fetch(`/generate-presigned-url?filename=${encodeURIComponent(file.name)}&uploadId=${uploadID}&partNumber=${partNumber}`, {
+                    method: 'POST',
+                    credentials: 'include',
+                });
+                const presignedData = await presignedResponse.json();
+
+                // Step 3: Upload the part
+                const uploadPartResponse = await fetch(presignedData.url, {
+                    method: 'PUT',
+                    body: blob,
+                    mode: 'cors',
+                });
+
+                if (uploadPartResponse.ok) {
+                    const etag = uploadPartResponse.headers.get('ETag');
+                    const cleanEtag = etag ? etag.replace(/"/g, '') : null;
+
+                    if (cleanEtag !== calculatedMD5) {
+                        console.error('MD5 mismatch for part', partNumber);
+                        console.log('Calculated MD5:', calculatedMD5);
+                        console.log('ETag:', cleanEtag);
+                        alert('MD5 mismatch for part ' + partNumber);
+                        return;
+                    }
+
+                    if (cleanEtag) {
+                        completedParts.push({ 
+                            ETag: cleanEtag, 
+                            PartNumber: partNumber
+                        });
+                        console.log(`Part ${partNumber} uploaded. ETag: ${cleanEtag}, Calculated MD5: ${calculatedMD5}`);
+                    } else {
+                        console.error('ETag is missing for part', partNumber);
+                        alert('Failed to get ETag for part ' + partNumber);
+                        return;
+                    }
+                } else {
+                    alert('Failed to upload part ' + partNumber);
+                    return;
+                }
+            }
+
+            console.log('Completed parts:', completedParts);
+
+            // Step 4: Complete multipart upload
+            const completeResponse = await fetch(`/complete-multipart-upload?filename=${encodeURIComponent(file.name)}&uploadId=${uploadID}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(completedParts),
+                credentials: 'include',
+            });
+
+            if (completeResponse.ok) {
+                alert('File uploaded successfully!');
+            } else {
+                alert('Failed to complete upload.');
+            }
+        }
+    </script>
+</body>
+</html>
