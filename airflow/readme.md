@@ -13,5 +13,8 @@
 - https://bytebytego.com/courses/system-design-interview/design-youtube
 - https://www.designgurus.io/course-play/grokking-the-system-design-interview/doc/designing-youtube-or-netflix
 
+## Plugins
+- https://airflow.apache.org/docs/apache-airflow/1.10.14/howto/operator/gcp/speech.html#google-cloud-speech-to-text-operators
+
 ## Setup
 - https://airflow.apache.org/docs/apache-airflow/2.0.2/start/docker.html

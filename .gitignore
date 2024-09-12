@@ -7,3 +7,7 @@ segment*.ts
 *.aac
 *.h264
 .env
+.venv
+airflow/logs/*
+airflow/tmp/*
+__pycache__
