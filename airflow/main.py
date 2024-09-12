@@ -1,100 +1,112 @@
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
-from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from datetime import datetime, timedelta
-import ffmpeg
-import os
-from dotenv import load_dotenv
+import boto3
+import subprocess
 
-# Load environment variables from .env file
-load_dotenv()
+# S3 client setup
+s3 = boto3.client('s3')
 
-default_args = {
-    'owner': 'airflow',
-    'depends_on_past': False,
-    'start_date': datetime(2023, 1, 1),
-    'email_on_failure': False,
-    'email_on_retry': False,
-    'retries': 1,
-    'retry_delay': timedelta(minutes=5),
-}
+# Constants
+S3_BUCKET = 'your-bucket-name'
+VIDEO_KEY = 'path/to/your/video.mp4'
+CHUNK_DURATION = 40  # in seconds
 
-dag = DAG(
-    'video_processing',
-    default_args=default_args,
-    description='A DAG to process videos for adaptive bitrate streaming',
-    schedule_interval=timedelta(days=1),
-)
+def download_video_metadata(**kwargs):
+    # Assuming metadata is stored in S3 or can be generated
+    # Here we just simulate retrieving video duration
+    return {'duration': 3600}  # Example: 1 hour video
 
-def download_video(**kwargs):
-    s3 = S3Hook(aws_conn_id='aws_default')
-    bucket = os.getenv('S3_RAW_BUCKET')
-    key = os.getenv('S3_RAW_KEY')
-    local_path = '/tmp/raw_video.mp4'
-    s3.get_key(key, bucket_name=bucket).download_file(local_path)
-    return local_path
+def generate_chunks(metadata, **kwargs):
+    duration = metadata['duration']
+    num_chunks = duration // CHUNK_DURATION
+    chunks = [(i * CHUNK_DURATION, (i + 1) * CHUNK_DURATION) for i in range(num_chunks)]
+    
+    return chunks
 
-def process_video(**kwargs):
-    input_path = kwargs['task_instance'].xcom_pull(task_ids='download_video')
-    output_formats = [
-        {'resolution': '360p', 'bitrate': '800k'},
-        {'resolution': '720p', 'bitrate': '2400k'},
-        {'resolution': '1080p', 'bitrate': '4800k'}
+def process_chunk(chunk, **kwargs):
+    start, end = chunk
+    chunk_key = f"chunks/chunk_{start}_{end}.mp4"
+    
+    # Download the specific chunk from S3 (sequentially)
+    cmd = [
+        'ffmpeg',
+        '-i', f's3://{S3_BUCKET}/{VIDEO_KEY}',
+        '-ss', str(start),
+        '-to', str(end),
+        '-c', 'copy',
+        f'/tmp/{chunk_key}'
     ]
-    output_paths = []
+    subprocess.run(cmd)
     
-    for format in output_formats:
-        output_path = f"/tmp/processed_{format['resolution']}.mp4"
-        (
-            ffmpeg
-            .input(input_path)
-            .output(output_path, vf=f"scale=-1:{format['resolution'][:-1]}", 
-                    video_bitrate=format['bitrate'])
-            .overwrite_output()
-            .run(capture_stdout=True, capture_stderr=True)
+    # Process the chunk (e.g., transcoding)
+    processed_chunk_key = f"processed/{chunk_key}"
+    # Replace the following with actual processing logic
+    subprocess.run(['ffmpeg', '-i', f'/tmp/{chunk_key}', f'/tmp/{processed_chunk_key}'])
+    
+    # Upload processed chunk back to S3
+    s3.upload_file(f'/tmp/{processed_chunk_key}', S3_BUCKET, processed_chunk_key)
+    
+    # Clean up local storage
+    subprocess.run(['rm', f'/tmp/{chunk_key}', f'/tmp/{processed_chunk_key}'])
+
+    return processed_chunk_key
+
+def cleanup_chunks(processed_chunk_keys, **kwargs):
+    # Cleanup logic if needed
+    pass
+
+with DAG(
+    'video_processing',
+    default_args={
+        'depends_on_past': False,
+        'email_on_failure': False,
+        'email_on_retry': False,
+        'retries': 1,
+        'retry_delay': timedelta(minutes=5),
+    },
+    description='A video processing workflow',
+    schedule_interval=timedelta(days=1),
+    start_date=datetime(2023, 9, 11),
+    catchup=False,
+) as dag:
+
+    # Task to download video metadata
+    t1 = PythonOperator(
+        task_id='download_video_metadata',
+        python_callable=download_video_metadata,
+        provide_context=True
+    )
+
+    # Task to generate chunks
+    t2 = PythonOperator(
+        task_id='generate_chunks',
+        python_callable=generate_chunks,
+        provide_context=True
+    )
+
+    # Task to process chunks in parallel
+    process_chunk_tasks = []
+    for i in range(10):  # Assuming 10 chunks
+        task = PythonOperator(
+            task_id=f'process_chunk_{i}',
+            python_callable=process_chunk,
+            op_args=['{{ task_instance.xcom_pull(task_ids="generate_chunks")[%d] }}' % i],
+            provide_context=True
         )
-        output_paths.append(output_path)
-    
-    return output_paths
+        process_chunk_tasks.append(task)
+        t2 >> task  # Dependency
 
-def upload_processed_videos(**kwargs):
-    s3 = S3Hook(aws_conn_id='aws_default')
-    bucket = os.getenv('S3_PROCESSED_BUCKET')
-    processed_paths = kwargs['task_instance'].xcom_pull(task_ids='process_video')
-    
-    for path in processed_paths:
-        key = f"processed/{os.path.basename(path)}"
-        s3.load_file(path, key, bucket_name=bucket)
+    # Task to cleanup chunks
+    t3 = PythonOperator(
+        task_id='cleanup_chunks',
+        python_callable=cleanup_chunks,
+        provide_context=True
+    )
 
-def cleanup(**kwargs):
-    local_paths = [kwargs['task_instance'].xcom_pull(task_ids='download_video')] + \
-                  kwargs['task_instance'].xcom_pull(task_ids='process_video')
-    for path in local_paths:
-        if os.path.exists(path):
-            os.remove(path)
+    # Set dependencies
+    for task in process_chunk_tasks:
+        task >> t3
 
-download_task = PythonOperator(
-    task_id='download_video',
-    python_callable=download_video,
-    dag=dag,
-)
+    t1 >> t2  # Start the process
 
-process_task = PythonOperator(
-    task_id='process_video',
-    python_callable=process_video,
-    dag=dag,
-)
-
-upload_task = PythonOperator(
-    task_id='upload_processed_videos',
-    python_callable=upload_processed_videos,
-    dag=dag,
-)
-
-cleanup_task = PythonOperator(
-    task_id='cleanup',
-    python_callable=cleanup,
-    dag=dag,
-)
-
-download_task >> process_task >> upload_task >> cleanup_task
