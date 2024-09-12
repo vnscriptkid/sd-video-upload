@@ -11,9 +11,9 @@
     - subtitles
 - resolutions: 360, 720, 1080
 - streaming protocols: HLS, DASH
-- HLS: HTTP Live Streaming
+- HLS: HTTP Live Streaming protocol
     - .m3u8: manifest file (playlist), first file to be downloaded
     - .ts: video segments (MPEG-2 transport stream)
-- manifest files (m3u8 - HLS, mpd - DASH)
-    - primary: contains all the video segments
+- manifest (playlist) files (m3u8 - HLS, mpd - DASH)
     - variant: contains the video segments for a specific resolution
+    - primary: contains all available variants
